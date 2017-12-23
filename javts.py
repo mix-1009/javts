@@ -97,6 +97,10 @@ if __name__ == '__main__':
 
     with open('config.json', 'r') as f:
         config = json.load(f)
+        if not is_valid_hash(config['VirusTotalKey']):
+            print('Invalid key. Please add valid VirusTotal key in config.json file.\n')
+            sys.exit(0)
+
         VirusTotal.API_KEY = config['VirusTotalKey']
 
     args = parser.parse_args()
