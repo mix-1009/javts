@@ -11,8 +11,8 @@ class VTReportOutputGenerator:
     def print_results(self, data):
         print('\n')
         print('{:#^64}'.format(''))
-        print('Virus Total Report {0}'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        print('{:#^64}'.format(''))
+        print('{:^64}'.format('Virus Total Report {0}'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))))
+        print('{:#^64}\n'.format(''))
         
         if VTReportOutputGenerator.SORT_BY_POSITIVES:
             data = sorted(data, reverse=True, key=lambda x: x[1]['response_code'])
@@ -28,7 +28,6 @@ class VTReportOutputGenerator:
                 self._print(v)
             else:
                 print('{0:-^64}\n{1}\n'.format(v[0], v[1]['verbose_msg']))
-
 
     def _print(self, report):
         entity = report[0]
