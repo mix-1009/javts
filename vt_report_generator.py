@@ -15,9 +15,9 @@ class VTReportOutputGenerator:
                 if v[1]['response_code'] == 1:
                     self._print(v)
                 else:
-                    print('{0} : {1}'.format(v[0], v[1]['verbose_msg']))
+                    print('{0} : {1}\n'.format(v[0], v[1]['verbose_msg']))
             else:
-                print('Error, no report for: {0}'.format(v[0]))
+                print('Error, no report for: {0}\n'.format(v[0]))
 
 
     def _print(self, report):

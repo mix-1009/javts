@@ -9,8 +9,9 @@ import argparse
 import ntpath
 import json
 import re
+import datetime
+from multiprocessing.dummy import Pool as ThreadPool
 
-from multiprocessing.dummy import Pool as ThreadPool 
 from virus_total import VirusTotal
 from vt_report_generator import VTReportOutputGenerator
 
@@ -60,16 +61,21 @@ def is_valid_hash(file_hash):
 def check_files_on_vt(data):
     if len(data) > 0:
         vt_generator = VTReportOutputGenerator()
-        print('{0} file(s) will be checked on VT.'.format(len(data)))
-        print('Current VT limit: {0} requests per {1} seconds.'.format(VirusTotal.REQUEST_LIMIT, VirusTotal.TIME_INTERVAL))
-        estimated_time = [0, 0, 4] # Emperical value
+        estimated_time_s = 4 # Emperical value
+        estimated_time = [0, 0, estimated_time_s]
+        
         if len(data) > VirusTotal.REQUEST_LIMIT:
-            estimated_time = len(data)/VirusTotal.REQUEST_LIMIT * VirusTotal.TIME_INTERVAL
-            estimated_time = seconds_to_h_m_s(estimated_time)
+            estimated_time_s = len(data)/VirusTotal.REQUEST_LIMIT * VirusTotal.TIME_INTERVAL
+            estimated_time = seconds_to_h_m_s(estimated_time_s)
+        t = datetime.datetime.now() + datetime.timedelta(seconds=estimated_time_s)
 
-        print('Estimated time: {0:02}:{1:02}:{2:02}'.format(*estimated_time))
-        print('\n')
+        print('{0} file(s) will be checked on VT.'.format(len(data)))
+        print('Current VT limit: {0} requests per {1} seconds.\n'.format(VirusTotal.REQUEST_LIMIT, VirusTotal.TIME_INTERVAL))
 
+        print('Current time: {}'.format(datetime.datetime.now().strftime("%H:%M:%S")))
+        print('Estimated delta time: {0:02}:{1:02}:{2:02}'.format(*estimated_time))
+        print('Estimated completion time: {}\n'.format(t.time().strftime("%H:%M:%S")))
+        
         results = create_requests_pool('check', data)
         vt_generator.print_results(results)
 
@@ -117,3 +123,4 @@ if __name__ == '__main__':
 
     print('\n')
     print('°º¤ø,¸¸,ø¤º°`°º¤ø,¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸')
+
