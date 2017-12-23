@@ -1,6 +1,10 @@
 from datetime import datetime
 
 class VTReportOutputGenerator:
+
+    SORT_BY_POSITIVES = True
+
+
     def __init__(self):
         pass
 
@@ -9,15 +13,21 @@ class VTReportOutputGenerator:
         print('{:#^64}'.format(''))
         print('Virus Total Report {0}'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         print('{:#^64}'.format(''))
-  
+        
+        if VTReportOutputGenerator.SORT_BY_POSITIVES:
+            data = sorted(data, reverse=True, key=lambda x: x[1]['response_code'])
+            firs_zero_rc_idx = len(data)
+            try:
+                firs_zero_rc_idx = next(idx for x, idx in zip(data, range(len(data))) if x[1]['response_code']==0)
+            except StopIteration:
+                pass
+            data[:firs_zero_rc_idx] = sorted(data[:firs_zero_rc_idx], reverse=True, key=lambda x:x[1]['positives'])
+
         for v in data:
-            if v[1] is not None:
-                if v[1]['response_code'] == 1:
-                    self._print(v)
-                else:
-                    print('{0} : {1}\n'.format(v[0], v[1]['verbose_msg']))
+            if v[1]['response_code'] == 1:
+                self._print(v)
             else:
-                print('Error, no report for: {0}\n'.format(v[0]))
+                print('{0:-^64}\n{1}\n'.format(v[0], v[1]['verbose_msg']))
 
 
     def _print(self, report):
