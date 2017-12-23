@@ -32,7 +32,6 @@ def create_requests_pool(instance, data):
     pool.map(vt.execute, data)
     pool.close()
     pool.join()
-
     return vt.Reports
 
 
@@ -76,8 +75,8 @@ def check_files_on_vt(data):
         print('Estimated delta time: {0:02}:{1:02}:{2:02}'.format(*estimated_time))
         print('Estimated completion time: {}\n'.format(t.time().strftime("%H:%M:%S")))
         
-        results = create_requests_pool('check', data)
-        vt_generator.print_results(results)
+        results = create_requests_pool('check', list(data.keys()))
+        vt_generator.print_results(results, data)
 
 
 def is_valid_arguments(args):
@@ -85,7 +84,8 @@ def is_valid_arguments(args):
         return False
     if not (args.get ^ args.submit):
         return False
-
+    if args.submit and args.hash:
+        return False
     return (int(args.hash != None) + int(args.f != None) + int(args.d != None)) == 1
 
 
@@ -104,27 +104,31 @@ if __name__ == '__main__':
         VirusTotal.API_KEY = config['VirusTotalKey']
 
     args = parser.parse_args()
-    entities = []
+    entities = {}
 
-    if is_valid_arguments(args):
+    if not is_valid_arguments(args):
+        parser.print_help()
+        sys.exit(0)
+
+    if args.submit:
+        print('Submit method not yet implemented.')
+    else:
         if args.hash != None:
             if is_valid_hash(args.hash):
-                entities.append(args.hash)    
+                entities[args.hash] = args.hash    
         
         elif args.f != None:
-            entities.append(sha1(args.f))
+            entities[sha1(args.f)] = args.f
         
         elif args.d != None:
             if os.path.isdir(args.d):
                 for root, sub_folders, files in os.walk(args.d):
                     for f in files:
                         fpath = os.path.join(root, f)
-                        entities.append(sha1(fpath))
+                        entities[sha1(fpath)] = fpath
 
         check_files_on_vt(entities)        
-    else:
-        parser.print_help()
-
+    
     print('\n')
     print('°º¤ø,¸¸,ø¤º°`°º¤ø,¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸')
 

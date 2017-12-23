@@ -8,7 +8,7 @@ class VTReportOutputGenerator:
     def __init__(self):
         pass
 
-    def print_results(self, data):
+    def print_results(self, data, origin_entities):
         print('\n')
         print('{:#^64}'.format(''))
         print('{:^64}'.format('Virus Total Report {0}'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))))
@@ -25,15 +25,18 @@ class VTReportOutputGenerator:
 
         for v in data:
             if v[1]['response_code'] == 1:
-                self._print(v)
+                self._print(v, origin_entities)
             else:
-                print('{0:-^64}\n{1}\n'.format(v[0], v[1]['verbose_msg']))
+                # Hoping that 'resource' always sha1. Should be checked for 'submit' method.
+                file_hash = v[1]['resource']
+                print('{0:-^64}\n{1} : {2}\n'.format(origin_entities[file_hash], file_hash, v[1]['verbose_msg']))
 
-    def _print(self, report):
-        entity = report[0]
+
+    def _print(self, report, origin_entities):
+        file_hash = report[0]
         file_report = report[1]
 
-        print('{:-^64}'.format(entity))
+        print('{:-^64}'.format(origin_entities[file_hash]))
         print('sha1: {0}'.format(file_report['sha1']))
         print('md5: {0}'.format(file_report['md5']))
         print('sha256: {0}'.format(file_report['sha256']))
