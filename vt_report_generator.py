@@ -2,41 +2,41 @@ from datetime import datetime
 
 class VTReportOutputGenerator:
 
-    SORT_BY_POSITIVES = True
-
 
     def __init__(self):
         pass
 
-    def print_results(self, data, origin_entities):
+    def print_results(self, report, entities):
         print('\n')
         print('{:#^64}'.format(''))
         print('{:^64}'.format('Virus Total Report {0}'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))))
         print('{:#^64}\n'.format(''))
         
-        if VTReportOutputGenerator.SORT_BY_POSITIVES:
-            data = sorted(data, reverse=True, key=lambda x: x[1]['response_code'])
-            firs_zero_rc_idx = len(data)
-            try:
-                firs_zero_rc_idx = next(idx for x, idx in zip(data, range(len(data))) if x[1]['response_code']==0)
-            except StopIteration:
-                pass
-            data[:firs_zero_rc_idx] = sorted(data[:firs_zero_rc_idx], reverse=True, key=lambda x:x[1]['positives'])
+        positives = report.get_positive_reports()
+        clear = report.get_clear_reports()
+        empty = report.get_empty_reports()
+        bad_requests = report.get_bad_requests()
 
-        for v in data:
-            if v[1]['response_code'] == 1:
-                self._print(v, origin_entities)
-            else:
-                # Hoping that 'resource' always sha1. Should be checked for 'submit' method.
-                file_hash = v[1]['resource']
-                print('{0:-^64}\n{1} : {2}\n'.format(origin_entities[file_hash], file_hash, v[1]['verbose_msg']))
+        for v in (positives+clear):
+            self._print(v.request_result, v.original_entity)
+
+        for v in empty:
+            print('{0:-^64}\n{1} : {2}\n'.format(v.original_entity, v.request_result['resource'], v.request_result['verbose_msg']))
+
+        for v in bad_requests:
+            print('{0:-^64}\n{1}'.format(v.origin_entity, v.request_result['verbose_msg']))
+
+        print('{:#^64}'.format(' Statistics '))
+        print('Total entities was requested: {}'.format(len(entities)))
+        print('Total reports was received: {}'.format(len(positives)+len(clear)))
+        print('--positives scans: {}'.format(len(positives)))
+        print('--clean scans: {}'.format(len(clear)))
+        print('Not among the finished, queued or pending scans: {}'.format(len(empty)))
+        print('Requsts FAILED: {}'.format(len(bad_requests)))
 
 
-    def _print(self, report, origin_entities):
-        file_hash = report[0]
-        file_report = report[1]
-
-        print('{:-^64}'.format(origin_entities[file_hash]))
+    def _print(self, file_report, origin_entity):
+        print('{:-^64}'.format(origin_entity))
         print('sha1: {0}'.format(file_report['sha1']))
         print('md5: {0}'.format(file_report['md5']))
         print('sha256: {0}'.format(file_report['sha256']))

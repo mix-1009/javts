@@ -4,9 +4,17 @@ import logging
 
 class VirusTotal:
     
+    
     API_KEY = ''
     REQUEST_LIMIT = 4
     TIME_INTERVAL = 60
+    INCOMPLETE_RESPONSE = {'response_code':-1, 'verbose_msg':'ERROR: Respose processing failed.'}
+
+
+    class Record:
+        def __init__(self, original_entity, request_result):
+            self.original_entity = original_entity
+            self.request_result = request_result
 
 
     def __init__(self, instance):
@@ -45,11 +53,11 @@ class VirusTotal:
                     else:
                         time.sleep(delta_t)
             
-        self.Reports.append((v, result))
+        self.Reports.append(VirusTotal.Record(v, result))
 
 
     def _submit(self, req_file):
-        json_response = None
+        json_response = VirusTotal.INCOMPLETE_RESPONSE
         params = {'apikey': VirusTotal.API_KEY}
         files = {'file': (req_file, open(req_file, 'rb'))}
 
@@ -65,11 +73,11 @@ class VirusTotal:
 
 
     def _check(self, file_hash):
-        json_response = None
+        json_response = VirusTotal.INCOMPLETE_RESPONSE
         params = {'apikey': VirusTotal.API_KEY, 'resource': file_hash}
         headers = {
             "Accept-Encoding": "gzip, deflate",
-            "User-Agent" : "gzip,  My Python requests library example client or username"
+            "User-Agent" : "gzip, Python requests library github.com/mix-1009/javts"
         }
 
         try:
@@ -81,6 +89,7 @@ class VirusTotal:
             pass
 
         return json_response
+    
         
     def _get_logger(self):
         logger = logging.getLogger(__name__)

@@ -13,6 +13,7 @@ import datetime
 from multiprocessing.dummy import Pool as ThreadPool
 
 from virus_total import VirusTotal
+from vt_report import VTReport
 from vt_report_generator import VTReportOutputGenerator
 
 
@@ -76,7 +77,8 @@ def check_files_on_vt(data):
         print('Estimated completion time: {}\n'.format(t.time().strftime("%H:%M:%S")))
         
         results = create_requests_pool('check', list(data.keys()))
-        vt_generator.print_results(results, data)
+        vt_report = VTReport(results)
+        vt_generator.print_results(vt_report, data)
 
 
 def is_valid_arguments(args):
