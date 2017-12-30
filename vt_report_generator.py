@@ -18,18 +18,22 @@ class VTReportOutputGenerator:
             data = sorted(data, reverse=True, key=lambda x: x[1]['response_code'])
             firs_zero_rc_idx = len(data)
             try:
-                firs_zero_rc_idx = next(idx for x, idx in zip(data, range(len(data))) if x[1]['response_code']==0)
+                firs_zero_rc_idx = next(idx for x, idx in zip(data, range(len(data))) if ((x[1]['response_code']==0) or (x[1]['response_code']==-1)))
             except StopIteration:
                 pass
-            data[:firs_zero_rc_idx] = sorted(data[:firs_zero_rc_idx], reverse=True, key=lambda x:x[1]['positives'])
+            if firs_zero_rc_idx > 1:
+                data[:firs_zero_rc_idx] = sorted(data[:firs_zero_rc_idx], reverse=True, key=lambda x:x[1]['positives'])
 
         for v in data:
             if v[1]['response_code'] == 1:
                 self._print(v, origin_entities)
-            else:
+            elif v[1]['response_code'] == 0:
                 # Hoping that 'resource' always sha1. Should be checked for 'submit' method.
                 file_hash = v[1]['resource']
                 print('{0:-^64}\n{1} : {2}\n'.format(origin_entities[file_hash], file_hash, v[1]['verbose_msg']))
+            else:
+                #Temporary solution
+                print('{0:-^64}\n{1} : {2}\n'.format(origin_entities[v[0]], v[0], v[1]['verbose_msg']))
 
 
     def _print(self, report, origin_entities):
