@@ -3,18 +3,25 @@ import requests
 import logging
 
 class VirusTotal:
-    
-    
+
+
     API_KEY = ''
     REQUEST_LIMIT = 4
     TIME_INTERVAL = 60
-    INCOMPLETE_RESPONSE = {'response_code':-1, 'verbose_msg':'ERROR: Respose processing failed.'}
+    INCOMPLETE_RESPONSE = {'response_code':-1, 'verbose_msg':'ERROR: Response processing failed.'}
 
 
     class Record:
         def __init__(self, original_entity, request_result):
             self.original_entity = original_entity
             self.request_result = request_result
+            if self.request_result['response_code'] == 1:
+                self.int_attribute = self.request_result['positives']
+            else:
+                self.int_attribute = -1
+
+        def __lt__(self, other):
+            return self.int_attribute < other.int_attribute
 
 
     def __init__(self, instance):
@@ -89,8 +96,8 @@ class VirusTotal:
             pass
 
         return json_response
-    
-        
+
+
     def _get_logger(self):
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.INFO)
@@ -100,4 +107,3 @@ class VirusTotal:
 
         return logger
 
-        

@@ -1,4 +1,6 @@
-import heapq
+from heapq import heappush
+from heapq import heappop
+
 
 class VTReport:
 
@@ -9,25 +11,23 @@ class VTReport:
         self.positive_reports = []
         self.empty_reports = []
         self.bad_requests = []
-
         heap = []
 
         for record in data:
             report = record.request_result
-            
-            if report['response_code'] == 1:
 
+            if report['response_code'] == 1:
                 if report['positives'] == 0:
                     self.clear_reports.append(record)
                 else:
-                    heapq.heappush(heap, (report['positives'], record))  
-
+                    heappush(heap, record)
             elif report['response_code'] == 0:
                 self.empty_reports.append(record)
             else:
                 self.bad_requests.append(record)
 
-        self.positive_reports = list(reversed([heapq.heappop(heap)[1] for _ in range(len(heap))]))
+        while heap:
+            self.positive_reports.insert(0, heappop(heap))
 
 
     def get_positive_reports(self):
@@ -41,5 +41,4 @@ class VTReport:
 
     def get_bad_requests(self):
         return self.bad_requests
-        
-    
+

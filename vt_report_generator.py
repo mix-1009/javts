@@ -24,15 +24,16 @@ class VTReportOutputGenerator:
             print('{0:-^64}\n{1} : {2}\n'.format(v.original_entity, v.request_result['resource'], v.request_result['verbose_msg']))
 
         for v in bad_requests:
-            print('{0:-^64}\n{1}'.format(v.origin_entity, v.request_result['verbose_msg']))
+            print('{0:-^64}\n{1}'.format(v.original_entity, v.request_result['verbose_msg']))
 
         print('{:#^64}'.format(' Statistics '))
         print('Total entities was requested: {}'.format(len(entities)))
         print('Total reports was received: {}'.format(len(positives)+len(clear)))
-        print('--positives scans: {}'.format(len(positives)))
-        print('--clean scans: {}'.format(len(clear)))
+        print('  positives scans: {}'.format(len(positives)))
+        print('  clean scans: {}'.format(len(clear)))
         print('Not among the finished, queued or pending scans: {}'.format(len(empty)))
-        print('Requsts FAILED: {}'.format(len(bad_requests)))
+        if len(bad_requests) > 0:
+            print('Responces FAILED: {}'.format(len(bad_requests)))
 
 
     def _print(self, file_report, origin_entity):

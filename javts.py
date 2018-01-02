@@ -71,11 +71,10 @@ def check_files_on_vt(data):
 
         print('{0} file(s) will be checked on VT.'.format(len(data)))
         print('Current VT limit: {0} requests per {1} seconds.\n'.format(VirusTotal.REQUEST_LIMIT, VirusTotal.TIME_INTERVAL))
-
         print('Current time: {}'.format(datetime.datetime.now().strftime("%H:%M:%S")))
         print('Estimated delta time: {0:02}:{1:02}:{2:02}'.format(*estimated_time))
         print('Estimated completion time: {}\n'.format(t.time().strftime("%H:%M:%S")))
-        
+
         results = create_requests_pool('check', list(data.keys()))
         vt_report = VTReport(results)
         vt_generator.print_results(vt_report, data)
