@@ -23,10 +23,13 @@ parser.add_argument('-submit', action='store_true', help='Submit files on Virus 
 parser.add_argument('-hash', metavar = '', help='File hash.')
 parser.add_argument('-f', metavar = '', help='File name.')
 parser.add_argument('-d', metavar = '', help='Directory with files.')
+parser.add_argument('-hash_file', metavar = '', help='File with sha1/sha256/md5 hashes.')
 parser.add_argument('-log', metavar = '', help='Store results to log file.')
 parser.add_argument('-v_off', action='store_true', help='Turn off verbose mode. Works only if log on.')
 
+
 valid_hash = re.compile('([a-fA-F\d]{32}|[a-fA-F\d]{40}|[a-fA-F\d]{64})$')
+re_hash_file = re.compile('([a-fA-F\d]{32}|[a-fA-F\d]{40}|[a-fA-F\d]{64})(?:\s|,|$)')
 
 
 def create_requests_pool(instance, data):
@@ -94,7 +97,7 @@ def is_valid_arguments(args):
         return False
     if ((args.log == None) and (args.v_off == True)):
         return False
-    return (int(args.hash != None) + int(args.f != None) + int(args.d != None)) == 1
+    return (int(args.hash != None) + int(args.f != None) + int(args.d != None) + int(args.hash_file != None)) == 1
 
 
 if __name__ == '__main__':
@@ -137,6 +140,15 @@ if __name__ == '__main__':
                     for f in files:
                         fpath = os.path.join(root, f)
                         entities[file_sha1sum(fpath)] = fpath
+
+        elif args.hash_file != None:
+            with open(args.hash_file, 'r') as f:
+                result = re_hash_file.findall(f.read())
+                print('{} hashes was read from {}'.format(len(result), args.hash_file))
+                result = set(result)
+                print('({} unique hashes.)\n'.format(len(result)))
+                for h in result:
+                    entities[h] = h
 
         check_files_on_vt(entities, args.log)
 
