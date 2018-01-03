@@ -1,6 +1,6 @@
 **Just Another Virus Total Submitter**
 
-Simple tool for scan, submit file, hash or directory with files to VirusTotal.<br />
+Simple tool for scan, submit files, hash or directory with files to VirusTotal.<br />
 Using public VirusTotal API.<br />
 For more details please see https://www.virustotal.com/en/documentation/public-api/ <br />
 
@@ -9,10 +9,10 @@ For more details please see https://www.virustotal.com/en/documentation/public-a
 If you haven't VirusTotal key, please find 5 min and get your own.
 Put it to _config.json_ file.
 >```
->   ___       _   _ _____   
->  |_  |     | | | |_   _|  
->    | | __ _| | | | | |___ 
->    | |/ _` | | | | | / __|
+>    ___       _   _ _____   
+>   |_  |     | | | |_   _|  
+>     | | __ _| | | | | |___ 
+>     | |/ _` | | | | | / __|
 >/\__/ / (_| \ \_/ / | \__ \
 >\____/ \__,_|\___/  \_/___/
 >
