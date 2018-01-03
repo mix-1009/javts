@@ -1,30 +1,44 @@
+import sys
 from datetime import datetime
 
 class VTReportOutputGenerator:
 
+    VERBOSE_MODE = True
 
     def __init__(self):
         pass
 
     def print_results(self, report, entities):
+        self._print_results(report, entities)
+
+    def save_results(self, report, entities, log_file):
+        with open(log_file, 'a') as f:
+            verbose_mod = VTReportOutputGenerator.VERBOSE_MODE
+            sys.stdout = f
+            VTReportOutputGenerator.VERBOSE_MODE = True
+            self._print_results(report, entities)
+            sys.stdout = sys.__stdout__
+            VTReportOutputGenerator.VERBOSE_MODE = verbose_mod
+
+
+    def _print_results(self, report, entities):
         print('\n')
         print('{:#^64}'.format(''))
         print('{:^64}'.format('Virus Total Report {0}'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))))
         print('{:#^64}\n'.format(''))
-        
+
         positives = report.get_positive_reports()
         clear = report.get_clear_reports()
         empty = report.get_empty_reports()
         bad_requests = report.get_bad_requests()
 
-        for v in (positives+clear):
-            self._print(v.request_result, v.original_entity)
-
-        for v in empty:
-            print('{0:-^64}\n{1} : {2}\n'.format(v.original_entity, v.request_result['resource'], v.request_result['verbose_msg']))
-
-        for v in bad_requests:
-            print('{0:-^64}\n{1}'.format(v.original_entity, v.request_result['verbose_msg']))
+        if VTReportOutputGenerator.VERBOSE_MODE:
+            for v in (positives+clear):
+                self._print(v.request_result, v.original_entity)
+            for v in empty:
+                print('{0:-^64}\n{1} : {2}\n'.format(v.original_entity, v.request_result['resource'], v.request_result['verbose_msg']))
+            for v in bad_requests:
+                print('{0:-^64}\n{1}'.format(entities[v.original_entity], v.request_result['verbose_msg']))
 
         print('{:#^64}'.format(' Statistics '))
         print('Total entities was requested: {}'.format(len(entities)))
@@ -45,7 +59,7 @@ class VTReportOutputGenerator:
         print('Rate: {0}/{1}'.format(file_report['positives'], file_report['total']))
         print('permalink: {0}'.format(file_report['permalink']))
         print('Detects: ')
-        
+
         for av, results in file_report['scans'].items():
             if results['detected'] == True:
                 print(' - {0} ({1} {2}): {3}'.format(av, results['version'], results['update'], results['result']))

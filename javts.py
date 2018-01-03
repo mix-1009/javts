@@ -23,6 +23,8 @@ parser.add_argument('-submit', action='store_true', help='Submit files on Virus 
 parser.add_argument('-hash', metavar = '', help='File hash.')
 parser.add_argument('-f', metavar = '', help='File name.')
 parser.add_argument('-d', metavar = '', help='Directory with files.')
+parser.add_argument('-log', metavar = '', help='Store results to log file.')
+parser.add_argument('-v_off', action='store_true', help='Turn off verbose mode. Works only if log on.')
 
 valid_hash = re.compile('([a-fA-F\d]{32}|[a-fA-F\d]{40}|[a-fA-F\d]{64})$')
 
@@ -46,10 +48,10 @@ def seconds_to_h_m_s(seconds):
     return [int(h), int(m), int(s)]
 
 
-def sha1(fname):
+def file_sha1sum(fname):
     hash_sha1 = hashlib.sha1()
-    with open(fname, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
+    with open(fname, 'rb') as f:
+        for chunk in iter(lambda: f.read(4096), b''):
             hash_sha1.update(chunk)
     return hash_sha1.hexdigest()
 
@@ -58,12 +60,12 @@ def is_valid_hash(file_hash):
     return valid_hash.match(file_hash) != None
 
 
-def check_files_on_vt(data):
+def check_files_on_vt(data, log_file=None):
     if len(data) > 0:
         vt_generator = VTReportOutputGenerator()
         estimated_time_s = 4 # Emperical value
         estimated_time = [0, 0, estimated_time_s]
-        
+
         if len(data) > VirusTotal.REQUEST_LIMIT:
             estimated_time_s = len(data)/VirusTotal.REQUEST_LIMIT * VirusTotal.TIME_INTERVAL
             estimated_time = seconds_to_h_m_s(estimated_time_s)
@@ -79,6 +81,9 @@ def check_files_on_vt(data):
         vt_report = VTReport(results)
         vt_generator.print_results(vt_report, data)
 
+        if log_file:
+            vt_generator.save_results(vt_report, data, log_file)
+
 
 def is_valid_arguments(args):
     if len(sys.argv) < 3:
@@ -86,6 +91,8 @@ def is_valid_arguments(args):
     if not (args.get ^ args.submit):
         return False
     if args.submit and args.hash:
+        return False
+    if ((args.log == None) and (args.v_off == True)):
         return False
     return (int(args.hash != None) + int(args.f != None) + int(args.d != None)) == 1
 
@@ -111,25 +118,28 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(0)
 
+    if args.v_off:
+        VTReportOutputGenerator.VERBOSE_MODE = False
+
     if args.submit:
         print('Submit method not yet implemented.')
     else:
         if args.hash != None:
             if is_valid_hash(args.hash):
                 entities[args.hash] = args.hash    
-        
+
         elif args.f != None:
-            entities[sha1(args.f)] = args.f
+            entities[file_sha1sum(args.f)] = args.f
         
         elif args.d != None:
             if os.path.isdir(args.d):
                 for root, sub_folders, files in os.walk(args.d):
                     for f in files:
                         fpath = os.path.join(root, f)
-                        entities[sha1(fpath)] = fpath
+                        entities[file_sha1sum(fpath)] = fpath
 
-        check_files_on_vt(entities)        
-    
+        check_files_on_vt(entities, args.log)
+
     print('\n')
     print('°º¤ø,¸¸,ø¤º°`°º¤ø,¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸')
 
