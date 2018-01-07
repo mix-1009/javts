@@ -84,9 +84,9 @@ class VirusTotal:
         json_response = VirusTotal.INCOMPLETE_RESPONSE
         params = {'apikey': VirusTotal.API_KEY, 'resource': file_hash}
         headers = {
-            "Accept-Encoding": "gzip, deflate",
-            "User-Agent": "gzip,"
-            "Python requests library github.com/mix-1009/javts"
+            'Accept-Encoding': 'gzip, deflate',
+            'User-Agent': 'gzip,'
+            'Python requests library github.com/mix-1009/javts'
         }
 
         try:

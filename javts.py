@@ -122,10 +122,10 @@ def is_valid_arguments(args):
         return False
     if ((args.log is None) and (args.v_off is True)):
         return False
-    return (int(args.hash is not None) +
-            int(args.f is not None) +
-            int(args.d is not None) +
-            int(args.hash_file is not None)) == 1
+    return (int(args.hash is not None)
+            + int(args.f is not None)
+            + int(args.d is not None)
+            + int(args.hash_file is not None)) == 1
 
 
 if __name__ == '__main__':
