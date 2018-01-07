@@ -8,7 +8,10 @@ class VirusTotal:
     API_KEY = ''
     REQUEST_LIMIT = 4
     TIME_INTERVAL = 60
-    INCOMPLETE_RESPONSE = {'response_code': -1, 'verbose_msg': 'ERROR: Response processing failed.'}
+    INCOMPLETE_RESPONSE = {
+        'response_code': -1,
+        'verbose_msg': 'ERROR: Response processing failed.'
+        }
 
     class Record:
         def __init__(self, original_entity, request_result):
@@ -65,7 +68,11 @@ class VirusTotal:
         files = {'file': (req_file, open(req_file, 'rb'))}
 
         try:
-            response = requests.post('https://www.virustotal.com/vtapi/v2/file/scan', files=files, params=params)
+            response = requests.post(
+                'https://www.virustotal.com/vtapi/v2/file/scan',
+                files=files,
+                params=params
+                )
             json_response = response.json()
         except requests.exceptions.RequestException as e:
             pass
@@ -78,11 +85,16 @@ class VirusTotal:
         params = {'apikey': VirusTotal.API_KEY, 'resource': file_hash}
         headers = {
             "Accept-Encoding": "gzip, deflate",
-            "User-Agent": "gzip, Python requests library github.com/mix-1009/javts"
+            "User-Agent": "gzip,"
+            "Python requests library github.com/mix-1009/javts"
         }
 
         try:
-            response = requests.get('https://www.virustotal.com/vtapi/v2/file/report', params=params, headers=headers)
+            response = requests.get(
+                'https://www.virustotal.com/vtapi/v2/file/report',
+                params=params,
+                headers=headers
+                )
             json_response = response.json()
         except requests.exceptions.RequestException as e:
             pass

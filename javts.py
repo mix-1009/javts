@@ -1,5 +1,5 @@
 
-__version__ = '0.1'
+__version__ = '0.2'
 __author__ = 'Sergii Naumov'
 
 import os
@@ -18,18 +18,32 @@ from vt_report_generator import VTReportOutputGenerator
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-get', action='store_true', help='Get existing report from Virus Total.')
-parser.add_argument('-submit', action='store_true', help='Submit files on Virus Total. Not supported yet.')
+parser.add_argument(
+    '-get', action='store_true', help='Get existing report from Virus Total.'
+    )
+parser.add_argument(
+    '-submit',
+    action='store_true',
+    help='Submit files on Virus Total. Not supported yet.'
+    )
 parser.add_argument('-hash', metavar='', help='File hash.')
 parser.add_argument('-f', metavar='', help='File name.')
 parser.add_argument('-d', metavar='', help='Directory with files.')
-parser.add_argument('-hash_file', metavar='', help='File with sha1/sha256/md5 hashes.')
+parser.add_argument(
+    '-hash_file', metavar='', help='File with sha1/sha256/md5 hashes.'
+    )
 parser.add_argument('-log', metavar='', help='Store results to log file.')
-parser.add_argument('-v_off', action='store_true', help='Turn off verbose mode. Works only if log on.')
+parser.add_argument(
+    '-v_off',
+    action='store_true',
+    help='Turn off verbose mode. Works only if log on.'
+    )
 
 
 valid_hash = re.compile('([a-fA-F\d]{32}|[a-fA-F\d]{40}|[a-fA-F\d]{64})$')
-re_hash_file = re.compile('([a-fA-F\d]{32}|[a-fA-F\d]{40}|[a-fA-F\d]{64})(?:\s|,|$)')
+re_hash_file = re.compile(
+    '([a-fA-F\d]{32}|[a-fA-F\d]{40}|[a-fA-F\d]{64})(?:\s|,|$)'
+    )
 
 
 def create_requests_pool(instance, data):
@@ -70,15 +84,26 @@ def check_files_on_vt(data, log_file=None):
         estimated_time = [0, 0, estimated_time_s]
 
         if len(data) > VirusTotal.REQUEST_LIMIT:
-            estimated_time_s = len(data)/VirusTotal.REQUEST_LIMIT * VirusTotal.TIME_INTERVAL
+            estimated_time_s = (len(data)
+                                / VirusTotal.REQUEST_LIMIT
+                                * VirusTotal.TIME_INTERVAL)
             estimated_time = seconds_to_h_m_s(estimated_time_s)
-        t = datetime.datetime.now() + datetime.timedelta(seconds=estimated_time_s)
+        t = (datetime.datetime.now()
+             + datetime.timedelta(seconds=estimated_time_s))
 
         print('{0} file(s) will be checked on VT.'.format(len(data)))
-        print('Current VT limit: {0} requests per {1} seconds.\n'.format(VirusTotal.REQUEST_LIMIT, VirusTotal.TIME_INTERVAL))
-        print('Current time: {}'.format(datetime.datetime.now().strftime("%H:%M:%S")))
-        print('Estimated delta time: {0:02}:{1:02}:{2:02}'.format(*estimated_time))
-        print('Estimated completion time: {}\n'.format(t.time().strftime("%H:%M:%S")))
+        print('Current VT limit: {0} requests per {1} seconds.\n'.format(
+            VirusTotal.REQUEST_LIMIT, VirusTotal.TIME_INTERVAL)
+        )
+        print('Current time: {}'.format(
+            datetime.datetime.now().strftime("%H:%M:%S"))
+        )
+        print('Estimated delta time: {0:02}:{1:02}:{2:02}'.format(
+            *estimated_time)
+        )
+        print('Estimated completion time: {}\n'.format(
+            t.time().strftime("%H:%M:%S"))
+        )
 
         results = create_requests_pool('check', list(data.keys()))
         vt_report = VTReport(results)
@@ -97,7 +122,10 @@ def is_valid_arguments(args):
         return False
     if ((args.log is None) and (args.v_off is True)):
         return False
-    return (int(args.hash is not None) + int(args.f is not None) + int(args.d is not None) + int(args.hash_file is not None)) == 1
+    return (int(args.hash is not None) +
+            int(args.f is not None) +
+            int(args.d is not None) +
+            int(args.hash_file is not None)) == 1
 
 
 if __name__ == '__main__':
@@ -109,7 +137,10 @@ if __name__ == '__main__':
     with open('config.json', 'r') as f:
         config = json.load(f)
         if not is_valid_hash(config['VirusTotalKey']):
-            print('Invalid key. Please add valid VirusTotal key in config.json file.\n')
+            print(
+                'Invalid key. '
+                'Please add valid VirusTotal key in config.json file.\n'
+                )
             sys.exit(0)
 
         VirusTotal.API_KEY = config['VirusTotalKey']
@@ -144,7 +175,9 @@ if __name__ == '__main__':
         elif args.hash_file is not None:
             with open(args.hash_file, 'r') as f:
                 result = re_hash_file.findall(f.read())
-                print('{} hashes was read from {}'.format(len(result), args.hash_file))
+                print('{} hashes was read from {}'.format(
+                    len(result), args.hash_file)
+                )
                 result = set(result)
                 print('({} unique hashes.)\n'.format(len(result)))
                 for h in result:

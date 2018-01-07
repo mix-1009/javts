@@ -1,5 +1,4 @@
-from heapq import heappush
-from heapq import heappop
+from heapq import heappush, heappop
 
 
 class VTReport:
@@ -13,7 +12,6 @@ class VTReport:
 
         for record in data:
             report = record.request_result
-
             if report['response_code'] == 1:
                 if report['positives'] == 0:
                     self.clear_reports.append(record)
