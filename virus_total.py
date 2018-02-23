@@ -17,7 +17,7 @@ class VirusTotal:
         def __init__(self, original_entity, request_result):
             self.original_entity = original_entity
             self.request_result = request_result
-            if self.request_result['response_code'] == 1:
+            if (self.request_result['response_code'] == 1) and ('positives' in self.request_result):
                 self.int_attribute = self.request_result['positives']
             else:
                 self.int_attribute = -1
@@ -78,6 +78,7 @@ class VirusTotal:
             pass
         except ValueError as e:
             pass
+        # print(json_response)
         return json_response
 
     def _check(self, file_hash):

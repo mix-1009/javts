@@ -17,7 +17,7 @@ Put it to config.json file.
 \____/ \__,_|\___/  \_/___/
 
 Just Another Virus Total Submitter.
-version = 0.1
+version = 0.2
 
 usage: javts.py [-h] [-get] [-submit] [-hash] [-f] [-d] [-hash_file] [-log]
                 [-v_off]

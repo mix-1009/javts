@@ -4,18 +4,16 @@ __author__ = 'Sergii Naumov'
 
 import os
 import sys
-import hashlib
 import argparse
 import ntpath
-import json
-import re
 import datetime
 from multiprocessing.dummy import Pool as ThreadPool
 
 from virus_total import VirusTotal
 from vt_report import VTReport
 from vt_report_generator import VTReportOutputGenerator
-
+from javts_config import JavtsConfig
+from generic import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -39,11 +37,7 @@ parser.add_argument(
     help='Turn off verbose mode. Works only if log on.'
     )
 
-
-valid_hash = re.compile('([a-fA-F\d]{32}|[a-fA-F\d]{40}|[a-fA-F\d]{64})$')
-re_hash_file = re.compile(
-    '([a-fA-F\d]{32}|[a-fA-F\d]{40}|[a-fA-F\d]{64})(?:\s|,|$)'
-    )
+END_OF_OUTPUT = '\n°º¤ø,¸¸,ø¤º°`°º¤ø,¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸\n'
 
 
 def create_requests_pool(instance, data):
@@ -55,41 +49,34 @@ def create_requests_pool(instance, data):
     return vt.Reports
 
 
-def submit_files_to_vt(data):
-    results = create_requests_pool('submit', TEST_DATA)
+def submit_files_to_vt(data, log_file=None):
+    if len(data) > 0:
+        estimated_time, t = get_estimated_time(
+            len(data), VirusTotal.REQUEST_LIMIT, VirusTotal.TIME_INTERVAL)
 
+        print('{0} file(s) will be submitted to VT.'.format(len(data)))
+        print('Current VT limit: {0} requests per {1} seconds.\n'.format(
+            VirusTotal.REQUEST_LIMIT, VirusTotal.TIME_INTERVAL)
+        )
+        print('Current time: {}'.format(
+            datetime.datetime.now().strftime("%H:%M:%S"))
+        )
+        print('Estimated delta time: {0:02}:{1:02}:{2:02}'.format(
+            *estimated_time)
+        )
+        print('Estimated completion time: {}\n'.format(
+            t.time().strftime("%H:%M:%S"))
+        )
 
-def seconds_to_h_m_s(seconds):
-    m, s = divmod(seconds, 60)
-    h, m = divmod(m, 60)
-    return [int(h), int(m), int(s)]
-
-
-def file_sha1sum(fname):
-    hash_sha1 = hashlib.sha1()
-    with open(fname, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b''):
-            hash_sha1.update(chunk)
-    return hash_sha1.hexdigest()
-
-
-def is_valid_hash(file_hash):
-    return valid_hash.match(file_hash) is not None
+        results = create_requests_pool('submit', list(data.values()))
+ 
 
 
 def check_files_on_vt(data, log_file=None):
     if len(data) > 0:
         vt_generator = VTReportOutputGenerator()
-        estimated_time_s = 4  # Emperical value
-        estimated_time = [0, 0, estimated_time_s]
-
-        if len(data) > VirusTotal.REQUEST_LIMIT:
-            estimated_time_s = (len(data)
-                                / VirusTotal.REQUEST_LIMIT
-                                * VirusTotal.TIME_INTERVAL)
-            estimated_time = seconds_to_h_m_s(estimated_time_s)
-        t = (datetime.datetime.now()
-             + datetime.timedelta(seconds=estimated_time_s))
+        estimated_time, t = get_estimated_time(
+            len(data), VirusTotal.REQUEST_LIMIT, VirusTotal.TIME_INTERVAL)
 
         print('{0} file(s) will be checked on VT.'.format(len(data)))
         print('Current VT limit: {0} requests per {1} seconds.\n'.format(
@@ -113,77 +100,68 @@ def check_files_on_vt(data, log_file=None):
             vt_generator.save_results(vt_report, data, log_file)
 
 
-def is_valid_arguments(args):
-    if len(sys.argv) < 3:
-        return False
-    if not (args.get ^ args.submit):
-        return False
-    if args.submit and args.hash:
-        return False
-    if ((args.log is None) and (args.v_off is True)):
-        return False
-    return (int(args.hash is not None)
-            + int(args.f is not None)
-            + int(args.d is not None)
-            + int(args.hash_file is not None)) == 1
-
-
 if __name__ == '__main__':
     with open('logos/logo.txt', 'r') as f:
         print(f.read())
     print('Just Another Virus Total Submitter.')
     print('version = {0}\n'.format(__version__))
 
-    with open('config.json', 'r') as f:
-        config = json.load(f)
-        if not is_valid_hash(config['VirusTotalKey']):
-            print(
-                'Invalid key. '
-                'Please add valid VirusTotal key in config.json file.\n'
-                )
-            sys.exit(0)
-
-        VirusTotal.API_KEY = config['VirusTotalKey']
-
-    args = parser.parse_args()
-    entities = {}
-
-    if not is_valid_arguments(args):
-        parser.print_help()
+    # load config file
+    jconfig = JavtsConfig()
+    jconfig.load_config_file()
+    if not jconfig.is_correct:
+        print(jconfig.message)
+        print(END_OF_OUTPUT)
         sys.exit(0)
 
-    if args.v_off:
-        VTReportOutputGenerator.VERBOSE_MODE = False
+    VirusTotal.API_KEY = jconfig.API_KEY
+
+    # parse cmd args
+    if len(sys.argv) == 1:
+        parser.print_help()
+        print(END_OF_OUTPUT)
+        sys.exit(0)
+
+    args = parser.parse_args()
+    jconfig.load_command_arguments(args)
+    if not jconfig.is_correct:
+        print(jconfig.message)
+        print(END_OF_OUTPUT)
+        sys.exit(0)
+
+    VTReportOutputGenerator.VERBOSE_MODE = jconfig.VERBOSE
+
+    entities = {}
+
+    if args.hash is not None:
+        if is_valid_hash(args.hash):
+            entities[args.hash] = args.hash
+
+    elif args.f is not None:
+        entities[file_sha1sum(args.f)] = args.f
+
+    elif args.d is not None:
+        if os.path.isdir(args.d):
+            for root, sub_folders, files in os.walk(args.d):
+                for f in files:
+                    fpath = os.path.join(root, f)
+                    entities[file_sha1sum(fpath)] = fpath
+
+    elif args.hash_file is not None:
+        with open(args.hash_file, 'r') as f:
+            result = re_hash_file.findall(f.read())
+            print('{} hashes was read from {}'.format(
+                len(result), args.hash_file)
+            )
+            result = set(result)
+            print('({} unique hashes.)\n'.format(len(result)))
+            for h in result:
+                entities[h] = h
 
     if args.submit:
-        print('Submit method not yet implemented.')
+        submit_files_to_vt(entities, jconfig.LOG_NAME)
     else:
-        if args.hash is not None:
-            if is_valid_hash(args.hash):
-                entities[args.hash] = args.hash
-
-        elif args.f is not None:
-            entities[file_sha1sum(args.f)] = args.f
-
-        elif args.d is not None:
-            if os.path.isdir(args.d):
-                for root, sub_folders, files in os.walk(args.d):
-                    for f in files:
-                        fpath = os.path.join(root, f)
-                        entities[file_sha1sum(fpath)] = fpath
-
-        elif args.hash_file is not None:
-            with open(args.hash_file, 'r') as f:
-                result = re_hash_file.findall(f.read())
-                print('{} hashes was read from {}'.format(
-                    len(result), args.hash_file)
-                )
-                result = set(result)
-                print('({} unique hashes.)\n'.format(len(result)))
-                for h in result:
-                    entities[h] = h
-
-        check_files_on_vt(entities, args.log)
+        check_files_on_vt(entities, jconfig.LOG_NAME)
 
     print('\n')
-    print('°º¤ø,¸¸,ø¤º°`°º¤ø,¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸')
+    print(END_OF_OUTPUT)

@@ -5,6 +5,8 @@ from datetime import datetime
 class VTReportOutputGenerator:
 
     VERBOSE_MODE = True
+    LOG_FILE = None
+    LOG_FILE_MODE = 'a'
 
     def __init__(self):
         pass
@@ -13,7 +15,7 @@ class VTReportOutputGenerator:
         self._print_results(report, entities)
 
     def save_results(self, report, entities, log_file):
-        with open(log_file, 'a') as f:
+        with open(log_file, VTReportOutputGenerator.LOG_FILE_MODE) as f:
             verbose_mod = VTReportOutputGenerator.VERBOSE_MODE
             sys.stdout = f
             VTReportOutputGenerator.VERBOSE_MODE = True
